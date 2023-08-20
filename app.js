@@ -1,14 +1,25 @@
-const express = require('express');
-const { connect } = require('mongoose');
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv'
+import router from './src/routes/index.js';
+
+dotenv.config()
 
 const app = express();
+app.use(express.json()); 
+app.use('/api', router);
+
 const PORT = process.env.PORT || 3000;
 
-// connect to database
-connect('mongodb://localhost:27017', { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server is up on port ${PORT}`);
-    })
-}).catch(err => {
-    console.log(`ERROR connecting to the database`, err);
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('Error connecting to the database:', err);
+  });
