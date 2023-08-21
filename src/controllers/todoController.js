@@ -80,3 +80,32 @@ export const getTodoById = async (req, res) => {
     });
   }
 };
+
+export const updateTodoById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const updatedTodo = await Todo.findByIdAndUpdate(id, updates, {
+      new: true, // Return the updated document
+    });
+
+    if (!updatedTodo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Todo not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Todo has been updated',
+      data: updatedTodo,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `An error occurred while updating todo: ${error.message}`,
+    });
+  }
+};

@@ -1,5 +1,7 @@
 /* eslint-disable no-undef */
-import { createTodo, getAllTodos, getTodoById } from '../controllers/todoController';
+import {
+  createTodo, getAllTodos, getTodoById, updateTodoById,
+} from '../controllers/todoController';
 import Todo from '../models/Todo';
 import { paginateData } from '../lib/utils';
 
@@ -244,6 +246,71 @@ describe('Get Todo by Id', () => {
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: 'An error occurred while fetching todo: Database error',
+    });
+  });
+});
+
+describe('Update a todo', () => {
+  it('should update a todo and return the updated todo when the todo exists', async () => {
+    const req = {
+      params: { id: 'todoId' },
+      body: { title: 'Updated Todo' },
+    };
+    const res = mockResponse();
+
+    const findByIdAndUpdateMock = jest.spyOn(Todo, 'findByIdAndUpdate').mockResolvedValueOnce({ _id: 'todoId', title: 'Updated Todo' });
+
+    await updateTodoById(req, res);
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith('todoId', { title: 'Updated Todo' }, { new: true });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'Todo has been updated',
+      data: { _id: 'todoId', title: 'Updated Todo' },
+    });
+  });
+
+  it('should return a 404 status code and an error message when the todo is not found', async () => {
+    const req = {
+      params: { id: 'nonExistentTodoId' },
+      body: { title: 'Updated Todo' },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const findByIdAndUpdateMock = jest.spyOn(Todo, 'findByIdAndUpdate').mockResolvedValueOnce(null);
+
+    await updateTodoById(req, res);
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith('nonExistentTodoId', { title: 'Updated Todo' }, { new: true });
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Todo not found',
+    });
+  });
+
+  it('should return a 500 status code and an error message when an error occurs while updating the todo', async () => {
+    const req = {
+      params: { id: 'todoId' },
+      body: { title: 'Updated Todo' },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const error = new Error('Update error');
+    const findByIdAndUpdateMock = jest.spyOn(Todo, 'findByIdAndUpdate').mockRejectedValueOnce(error);
+
+    await updateTodoById(req, res);
+
+    expect(findByIdAndUpdateMock).toHaveBeenCalledWith('todoId', { title: 'Updated Todo' }, { new: true });
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'An error occurred while updating todo: Update error',
     });
   });
 });
