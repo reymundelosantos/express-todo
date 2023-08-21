@@ -5,6 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
+    "start": "node --experimental-modules --es-module-specifier-resolution=node app.js",
     "dev": "nodemon --experimental-modules --es-module-specifier-resolution=node app.js",
     "test": "jest",
     "test:watch": "jest --watch",
