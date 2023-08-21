@@ -1,5 +1,6 @@
-import Todo from "../models/Todo";
-import { PostTodoSchema } from "../validations/todo";
+/* eslint-disable consistent-return */
+import Todo from '../models/Todo';
+import { PostTodoSchema } from '../validations/todo';
 
 export const createTodo = async (req, res) => {
   try {
@@ -10,10 +11,12 @@ export const createTodo = async (req, res) => {
     const newTodo = new Todo({
       ...req.body,
     });
-    const { _id: id, title, description, isCompleted } = await newTodo.save();
+    const {
+      _id: id, title, description, isCompleted,
+    } = await newTodo.save();
     res.status(201).json({
       success: true,
-      message: "Todo created!",
+      message: 'Todo created!',
       data: {
         id,
         title,
