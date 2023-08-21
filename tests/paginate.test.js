@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { paginateData } from '../lib/utils';
+import { paginateData } from '../src/lib/utils';
 
 describe('paginateData', () => {
   it('should return the first page of data when page and limit are 1', () => {

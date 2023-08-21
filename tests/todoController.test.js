@@ -1,9 +1,9 @@
 /* eslint-disable no-undef */
 import {
   createTodo, getAllTodos, getTodoById, updateTodoById, deleteTodoById,
-} from '../controllers/todoController';
-import Todo from '../models/Todo';
-import { paginateData } from '../lib/utils';
+} from '../src/controllers/todoController';
+import Todo from '../src/models/Todo';
+import { paginateData } from '../src/lib/utils';
 
 const mockResponse = () => {
   const res = {};
