@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import {
-  createTodo, getAllTodos, getTodoById, updateTodoById,
+  createTodo, getAllTodos, getTodoById, updateTodoById, deleteTodoById,
 } from '../controllers/todoController';
 import Todo from '../models/Todo';
 import { paginateData } from '../lib/utils';
@@ -311,6 +311,70 @@ describe('Update a todo', () => {
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: 'An error occurred while updating todo: Update error',
+    });
+  });
+});
+
+describe('Delete Todo', () => {
+  it('should delete a todo by ID and return a 200 status code with the deleted todo data', async () => {
+    const req = {
+      params: {
+        id: 'todoId',
+      },
+    };
+    const res = mockResponse();
+    const deletedTodo = { _id: 'todoId', title: 'Test Todo', completed: false };
+    Todo.findByIdAndDelete = jest.fn().mockResolvedValue(deletedTodo);
+
+    await deleteTodoById(req, res);
+
+    expect(Todo.findByIdAndDelete).toHaveBeenCalledWith('todoId');
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'Todo has been deleted!',
+    });
+  });
+
+  it('should return a 404 status code with an error message if the todo ID is not found', async () => {
+    const req = {
+      params: {
+        id: 'todoId',
+      },
+    };
+    const res = mockResponse();
+    Todo.findByIdAndDelete = jest.fn().mockResolvedValue(null);
+
+    await deleteTodoById(req, res);
+
+    expect(Todo.findByIdAndDelete).toHaveBeenCalledWith('todoId');
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Todo not found',
+    });
+  });
+
+  it('should return a 500 status code with an error message if an error occurs during the deletion process', async () => {
+    const req = {
+      params: {
+        id: 'todoId',
+      },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const errorMessage = 'An error occurred';
+    Todo.findByIdAndDelete = jest.fn().mockRejectedValue(new Error(errorMessage));
+
+    await deleteTodoById(req, res);
+
+    expect(Todo.findByIdAndDelete).toHaveBeenCalledWith('todoId');
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: `An error occurred while deleting todo: ${errorMessage}`,
     });
   });
 });
