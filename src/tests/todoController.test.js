@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { createTodo, getAllTodos } from '../controllers/todoController';
+import { createTodo, getAllTodos, getTodoById } from '../controllers/todoController';
 import Todo from '../models/Todo';
 import { paginateData } from '../lib/utils';
 
@@ -178,6 +178,72 @@ describe('Get All Todos', () => {
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: `An error occurred while fetching todos: ${errorMessage}`,
+    });
+  });
+});
+
+describe('Get Todo by Id', () => {
+  it('should return a 200 status code and the todo object when a valid id is provided', async () => {
+    const req = {
+      params: {
+        id: 'validId',
+      },
+    };
+    const res = mockResponse();
+    const todo = { _id: 'validId', title: 'Test Todo', completed: false };
+    Todo.findById = jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(todo),
+    });
+
+    await getTodoById(req, res);
+
+    expect(Todo.findById).toHaveBeenCalledWith('validId', { __v: 0 });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: todo,
+    });
+  });
+
+  it('should return a 404 status code and an error message when an invalid id is provided', async () => {
+    const req = {
+      params: {
+        id: 'invalidId',
+      },
+    };
+    const res = mockResponse();
+    Todo.findById = jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(null),
+    });
+
+    await getTodoById(req, res);
+
+    expect(Todo.findById).toHaveBeenCalledWith('invalidId', { __v: 0 });
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Todo not found',
+    });
+  });
+
+  it('should handle errors thrown by Todo.findById and return a 500 status code with an error message', async () => {
+    const req = {
+      params: {
+        id: 'validId',
+      },
+    };
+    const res = mockResponse();
+    Todo.findById.mockReturnValue({
+      lean: jest.fn().mockRejectedValue(new Error('Database error')),
+    });
+
+    await getTodoById(req, res);
+
+    expect(Todo.findById).toHaveBeenCalledWith('validId', { __v: 0 });
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'An error occurred while fetching todo: Database error',
     });
   });
 });
