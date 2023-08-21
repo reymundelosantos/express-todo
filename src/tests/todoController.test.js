@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 import { createTodo, getAllTodos } from '../controllers/todoController';
 import Todo from '../models/Todo';
+import { paginateData } from '../lib/utils';
 
 const mockResponse = () => {
   const res = {};
@@ -98,6 +99,85 @@ describe('createTodo', () => {
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: 'An error occured: Test Error',
+    });
+  });
+});
+
+describe('Get All Todos', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should get paginated todos', async () => {
+    const req = { query: { page: 1, limit: 2 } };
+    const res = mockResponse();
+
+    const mockTodos = [
+      { _id: '1', title: 'Todo 1' },
+      { _id: '2', title: 'Todo 2' },
+      { _id: '3', title: 'Todo 3' },
+    ];
+
+    Todo.find = jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(mockTodos),
+    });
+
+    await getAllTodos(req, res);
+
+    expect(Todo.find).toHaveBeenCalledWith({}, { __v: 0 });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: paginateData(mockTodos, {
+        page: 1,
+        limit: 2,
+      }),
+    });
+  });
+
+  it('should get the 2nd page of todos', async () => {
+    const req = { query: { page: 2, limit: 2 } };
+    const res = mockResponse();
+
+    const mockTodos = [
+      { _id: '1', title: 'Todo 1' },
+      { _id: '2', title: 'Todo 2' },
+      { _id: '3', title: 'Todo 3' },
+    ];
+
+    Todo.find = jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(mockTodos),
+    });
+
+    await getAllTodos(req, res);
+
+    expect(Todo.find).toHaveBeenCalledWith({}, { __v: 0 });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: paginateData(mockTodos, {
+        page: 2,
+        limit: 2,
+      }),
+    });
+  });
+
+  it('should handle errors when fetching todos', async () => {
+    const req = { query: { page: 1, limit: 2 } };
+    const res = mockResponse();
+
+    const errorMessage = 'An error occurred';
+    Todo.find.mockReturnValue({
+      lean: jest.fn().mockRejectedValue(new Error(errorMessage)),
+    });
+
+    await getAllTodos(req, res);
+
+    expect(Todo.find).toHaveBeenCalledWith({}, { __v: 0 });
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: `An error occurred while fetching todos: ${errorMessage}`,
     });
   });
 });
