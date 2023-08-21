@@ -1,6 +1,7 @@
 /* eslint-disable consistent-return */
 import Todo from '../models/Todo';
 import { PostTodoSchema } from '../validations/todo';
+import { paginateData } from '../lib/utils';
 
 export const createTodo = async (req, res) => {
   try {
@@ -32,4 +33,25 @@ export const createTodo = async (req, res) => {
   }
 };
 
+export const getAllTodos = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+    };
 
+    const todos = await Todo.find({}, { __v: 0 }).lean();
+    const data = paginateData(todos, options);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `An error occurred while fetching todos: ${error.message}`,
+    });
+  }
+};
